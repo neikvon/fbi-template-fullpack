@@ -1,0 +1,33 @@
+{
+  "name": "webpack-multiple-entries",
+  "version": "1.0.0",
+  "description": "Project template with multiple entries",
+  "author": "fbi",
+  "license": "MIT",
+  "repository": {},
+  "devDependencies": {
+    "autoprefixer": "^6.4.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "copy-webpack-plugin": "^3.0.1",
+    "css-loader": "^0.24.0",
+    "cssnano": "^3.7.4",
+    "eventsource-polyfill": "^0.9.6",
+    "extract-text-webpack-plugin": "^2.0.0-beta.3",
+    "file-loader": "^0.9.0",
+    "glob": "^7.0.6",
+    "html-loader": "^0.4.3",
+    "koa": "^2.0.0-alpha.5",
+    "koa-static": "^3.0.0",
+    "koa-webpack-dev-middleware": "^1.2.2",
+    "koa-webpack-hot-middleware": "^1.0.3",
+    "koa-webpack-middleware": "^1.0.1",
+    "postcss-loader": "^0.10.1",
+    "precss": "^1.4.0",
+    "rimraf": "^2.5.4",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^2.1.0-beta.21"
+  }
+}
