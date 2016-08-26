@@ -24,3 +24,11 @@ body {
     color: #999
   }
 }
+
+.ico-funny {
+  margin: 10px;
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  background: url('../img/funny.png') center center no-repeat;
+}
