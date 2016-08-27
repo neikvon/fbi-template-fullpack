@@ -17,7 +17,17 @@ module.exports = {
   },
   webpack: {
     hash: true, // 是否非覆盖式发布
-    inline: true, // css、js是否内联
-    tmpl: 'handlebars'
+    inline: false, // css、js是否内联
+    tmpl: 'handlebars', // 模板引擎
+    hot: true, // 热更新
+    data: { // 编译时数据
+    },
+    banner:
+`Project name - [description]
+
+Author: [name]
+Built: ${new Date().toLocaleString()} via fbi
+
+Copyright 2016 [organization]`
   }
 }

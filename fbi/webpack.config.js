@@ -1,5 +1,4 @@
 module.exports = (require, ctx) => {
-
   const fs = require('fs')
   const path = require('path')
   const glob = require('glob')
@@ -8,16 +7,72 @@ module.exports = (require, ctx) => {
   const HtmlWebpackPlugin = require('html-webpack-plugin')
   const HtmlInlineWebpackPlugin = require('./plugins/html-inline-webpack-plugin')
   const CopyWebpackPlugin = require('copy-webpack-plugin')
-  const nodeModulesPath = ctx.options.node_modules_path
-  // const nodeModulesPath = ctx._.cwd('node_modules') // for local test
+  const nodeModulesPath = ctx.nodeModulesPath = ctx.options.node_modules_path
+  // const nodeModulesPath = ctx.nodeModulesPath = ctx._.cwd('node_modules') // for local test
+  const eslintConfig = require('./eslint.config')(require, ctx)
+  const stylelintConfig = require('./stylelint.config')(require, ctx)
   const prod = ctx.isProd
   const hash = ctx.options.webpack.hash
+  const hot = !prod && ctx.options.webpack.hot
   const noop = function () { }
   const ver = {
     hash: '[hash:6]',
     chunkhash: '[chunkhash:6]',
     contenthash: '[contenthash:6]'
   }
+
+  // get entries
+  function entries() {
+    let entries = {}
+    const files = glob.sync(`src/js/*.js`)
+    files.map(item => {
+      entries[path.basename(item, '.js')] = hot
+        ? [
+          nodeModulesPath + '/webpack-hot-middleware/client',
+          './' + item
+        ]
+        : './' + item
+    })
+    return entries
+  }
+
+  function templates(plugins) {
+    const files = glob.sync(`src/*.html`)
+    files.map(item => {
+      const filename = path.basename(item)
+      const chunkname = path.basename(item, `.html`)
+      let hasJs = false
+      try {
+        fs.accessSync('src/js/' + chunkname + '.js')
+        hasJs = true
+      } catch (e) { }
+
+      plugins.push(new HtmlWebpackPlugin({
+        filename: filename,
+        template: item,
+        inject: !ctx.options.webpack.inline,
+        chunks: hasJs ? ['common', chunkname] : [],
+        minify: prod ? {
+          collapseWhitespace: true,
+          preserveLineBreaks: false,
+          removeComments: true,
+          removeEmptyAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          removeScriptTypeAttributes: true,
+          useShortDoctype: true
+        } : false,
+        inline: ctx.options.webpack.inline
+      }))
+    })
+
+    if (ctx.options.webpack.inline) {
+      plugins.push(new HtmlInlineWebpackPlugin({
+        env: prod ? 'production' : '',
+        len: files.length
+      }))
+    }
+  }
+
   const config = {
     entry: entries(),
     output: {
@@ -27,15 +82,26 @@ module.exports = (require, ctx) => {
       path: prod ? ctx._.join(__dirname, '../', ctx.options.server.root) : '/',
       publicPath: prod ? './' : '/'
     },
-    // context: path.join(process.cwd(), 'src'),
     resolve: {
-      modules: [nodeModulesPath] // important !!
+      modules: [
+        'node_modules',
+        nodeModulesPath
+      ]
     },
     resolveLoader: {
       modules: [nodeModulesPath] // important !!
     },
-    devtool: !prod ? 'source-map' : null,
+    devtool: !prod ? 'cheap-module-eval-source-map' : null,
     module: {
+      preLoaders: [
+        // js lint
+        {
+          test: /\.js$/,
+          loader: 'eslint-loader',
+          exclude: /node_modules/,
+          query: eslintConfig
+        }
+      ],
       loaders: [
         {
           test: /\.js$/,
@@ -49,24 +115,27 @@ module.exports = (require, ctx) => {
             cacheDirectory: true
           }
         },
-        // {
-        //   test: /\.html$/,
-        //   loader: 'html'
-        // },
-        {
-          test: /\.(html|hbs)$/i, loader: `handlebars?partialDirs[]=path.join(process.cwd(), 'src/partials')`,
-          // query: {
-          //   partialDirs: [
-          //     path.join(process.cwd(), 'src/partials')
-          //   ]
-          // }
-        },
+        (ctx.options.webpack.tmpl === 'handlebars')
+          ? {
+            test: /\.(html|hbs)$/i, loader: 'handlebars',
+            query: {
+              extensions: ['.hbs', '.html'],
+              inlineRequires: '\/img\/',
+              partialDirs: [path.join(process.cwd(), 'src/hbs/partials')],
+              helperDirs: [path.join(process.cwd(), 'src/hbs/helpers')],
+              debug: false
+            }
+          }
+          : {
+            test: /\.html$/,
+            loader: 'html'
+          },
         {
           test: /\.css$/,
           loader: ExtractTextPlugin.extract({
             fallbackLoader: 'style',
             loader: 'css!postcss',
-            publicPath: ctx.options.webpack.inline ? './' : '../'                   // css文件内部资源路径前缀
+            publicPath: ctx.options.webpack.inline ? './' : '../'  // assets path prefix in css
           })
         },
         {
@@ -78,7 +147,8 @@ module.exports = (require, ctx) => {
       ]
     },
     plugins: [
-      prod ? noop : new webpack.HotModuleReplacementPlugin(),
+      prod ? new webpack.BannerPlugin(ctx.options.webpack.banner) : noop,
+      hot ? new webpack.HotModuleReplacementPlugin() : noop,
       prod ? noop : new webpack.NoErrorsPlugin(),
       new ExtractTextPlugin({
         filename: hash ?
@@ -97,76 +167,23 @@ module.exports = (require, ctx) => {
         { from: 'src/lib', to: 'lib' },
         { from: 'src/favicon.ico' }
       ]),
-
       prod ? new webpack.optimize.UglifyJsPlugin({ // js ugllify
         compress: {
           warnings: false
         }
-      }) : noop
+      }) : noop,
+      new webpack.DefinePlugin(ctx.options.webpack.data || {})
     ],
     postcss: [
-      require('autoprefixer')({
-        browsers: ['last 2 versions']
-      }),
+      require('stylelint')(stylelintConfig), // css lint
+      require('postcss-reporter'),
+      require('autoprefixer'),
       require('precss'),
       prod ? require('cssnano') : noop // css minify
     ]
   }
 
   templates(config.plugins)
-  // console.log(JSON.stringify(config.plugins, null, 2))
+
   return config
-
-
-  function entries() {
-    let entries = {}
-    const files = glob.sync(`src/js/*.js`)
-    files.map(item => {
-      entries[path.basename(item, '.js')] = prod
-        ? './' + item
-        : [
-          'eventsource-polyfill',
-          'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=2000&overlay=false&noInfo=true',
-          './' + item
-        ]
-    })
-    return entries
-  }
-
-  /**
-   * webpack-html-plugin
-   * inject assets:
-   * js name === html name
-   * 只有一个入口文件，或者声明依赖表
-   * 可以使用 hbs模板
-   */
-
-  function templates(plugins) {
-    const files = glob.sync(`src/*.html`)
-    files.map(item => {
-      const filename = path.basename(item)
-      const chunkname = path.basename(item, `.html`)
-      let hasJs = false
-      try {
-        fs.accessSync('src/js/' + chunkname + '.js')
-        hasJs = true
-      } catch (e) { }
-
-      plugins.push(new HtmlWebpackPlugin({
-        filename: filename,
-        template: item,
-        inject: !ctx.options.webpack.inline,
-        chunks: hasJs ? ['common', chunkname] : [],
-        inline: ctx.options.webpack.inline
-      }))
-    })
-
-    if (ctx.options.webpack.inline) {
-      plugins.push(new HtmlInlineWebpackPlugin({
-        env: prod ? 'production' : '',
-        len: files.length
-      }))
-    }
-  }
-
 }

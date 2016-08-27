@@ -1,18 +1,15 @@
-const fs = require('fs')
-const path = require('path')
 const http = require('http')
+const Koa = require('koa')
+const koaStatic = require('koa-static')
 const convert = require('koa-convert')
 const webpack = require('webpack')
-
-const fbi = ctx
-const devMiddleware = require('./middlewares/dev')
-const hotMiddleware = require('./middlewares/hot')
-const webpackConfig = require('./webpack.config.js')(require, fbi)
+const devMiddleware = require('koa-webpack-dev-middleware')
+const hotMiddleware = require('koa-webpack-hot-middleware')
+const webpackConfig = require('./webpack.config.js')(require, ctx)
 const compile = webpack(webpackConfig)
-
-let start = fbi.taskParams
-  ? fbi.taskParams[0] * 1
-  : fbi.options.server.port
+let start = ctx.taskParams
+  ? ctx.taskParams[0] * 1
+  : ctx.options.server.port
 
 // auto selected a valid port & start server
 function autoPortServer(app, cb) {
@@ -22,9 +19,9 @@ function autoPortServer(app, cb) {
 
   server.listen(port, err => {
     server.once('close', () => {
-      app.listen(port, err => {
+      server.listen(port, err => {
         if (err) {
-          fbi.log(err)
+          ctx.log(err)
           return
         }
         cb(port)
@@ -32,16 +29,17 @@ function autoPortServer(app, cb) {
     })
     server.close()
   })
+
   server.on('error', err => {
-    autoPortServer(cb)
+    autoPortServer(app, cb)
   })
 }
 
 function server() {
-  const Koa = require('koa')
-  const serve = require('koa-static')
   const app = new Koa()
+  const fbi = ctx
 
+  // logger
   app.use((ctx, next) => {
     const start = new Date()
     return next().then(() => {
@@ -50,24 +48,24 @@ function server() {
     })
   })
 
-  app.use(devMiddleware(compile, {
-    watchOptions: {
-      aggregateTimeout: 300,
-      poll: true
-    },
-    publicPath: '/',
+  // dev
+  app.use(convert(devMiddleware(compile, {
+    publicPath: webpackConfig.output.publicPath,
     stats: {
       colors: true,
       chunks: false,
       modules: false,
       children: false
     }
-  }))
+  })))
 
-  // serve static
-  app.use(serve('./src'))
+  // static
+  app.use(koaStatic('./src'))
 
-  app.use(hotMiddleware(compile))
+  // hot
+  if (ctx.options.webpack.hot) {
+    app.use(convert(hotMiddleware(compile)))
+  }
 
   // listen
   autoPortServer(app, port => {

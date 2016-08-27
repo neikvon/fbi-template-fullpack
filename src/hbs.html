@@ -1,12 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-  <!--<link rel="stylesheet" href="./css/index.css">-->
-</head>
-<body>
-  <h1>Handlebars file</h1>
-  {{> header}}
-</body>
-</html>
+{{> start title="Handlebars Template Demo"}}
+
+<h1>Handlebars file</h1>
+{{> header}}
+
+{{[transformers/embiggen] 'test embiggen'}}
+
+<br>
+
+{{#when 'data' '===' 'data'}}
+  Test 'when' succfullly0
+{{/when}}
+
+{{> end}}

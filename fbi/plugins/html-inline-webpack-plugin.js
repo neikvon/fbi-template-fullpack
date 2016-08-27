@@ -1,6 +1,19 @@
-'use strict'
+/**
+ * make assets inline in html
+ *
+ * usage:
+    const HtmlInlineWebpackPlugin = require('./plugins/html-inline-webpack-plugin')
 
-const fs = require('fs')
+    // webpack config
+    plugins:[
+      new HtmlInlineWebpackPlugin({
+        env: prod ? 'production' : '',
+        len: files.length
+      })
+    ]
+ */
+
+'use strict'
 
 function HtmlInlineWebpackPlugin(options) {
   this.num = 0
