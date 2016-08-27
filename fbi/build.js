@@ -1,8 +1,11 @@
 const webpack = require('webpack')
+const rm = require('rimraf')
 
 ctx.isProd = true
 
 const webpackConfig = require('./webpack.config.js')(require, ctx)
+
+rm.sync(ctx.options.server.root)
 
 webpack(webpackConfig, (err, stats) => {
   if (err) {

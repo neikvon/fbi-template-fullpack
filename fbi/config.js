@@ -14,5 +14,10 @@ module.exports = {
   alias: {
     b: 'build',
     s: 'serve'
+  },
+  webpack: {
+    hash: true, // 是否非覆盖式发布
+    inline: true, // css、js是否内联
+    tmpl: 'handlebars'
   }
 }
