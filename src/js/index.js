@@ -11,8 +11,8 @@ async function getJson() {
   }
 }
 getJson()
-console.log('app init')
-console.log(`sub: ${sub(2, 55)}`)
+console.log('app init 1111')
+console.log(`sub: ${sub(2, 559)}`)
 
 // for hot reload
 if (module.hot) {

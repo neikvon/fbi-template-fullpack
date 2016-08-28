@@ -22,14 +22,18 @@ function HtmlInlineWebpackPlugin(options) {
 
 HtmlInlineWebpackPlugin.prototype.apply = function (compiler) {
   const _this = this
+  const style_PATTERN = new RegExp('(<style>)', 'gi')
   compiler.plugin('compilation', function (compilation) {
     let filesToDelete = []
     compilation.plugin('html-webpack-plugin-before-html-processing', function (htmlPluginData, callback) {
       _this.num++
       htmlPluginData.assets.js.forEach(function (item) {
         item = item.replace(htmlPluginData.assets.publicPath, '')
-        const str = '<script>' + compilation.assets[item].source() + '</script>'
-        htmlPluginData.html = htmlPluginData.html.replace('</body>', str + '</body>')
+        const str = '<script type="text/javascript">' + compilation.assets[item].source() + '</script>'
+        htmlPluginData.html = htmlPluginData.html.replace(/(<\/body>)/i, (match) => {
+          return str + match
+        })
+
         if (filesToDelete.indexOf(item) < 0) {
           filesToDelete.push(item)
         }
@@ -38,7 +42,9 @@ HtmlInlineWebpackPlugin.prototype.apply = function (compiler) {
       htmlPluginData.assets.css.forEach(function (item) {
         item = item.replace(htmlPluginData.assets.publicPath, '')
         const str = '<style>' + compilation.assets[item].source() + '</style>'
-        htmlPluginData.html = htmlPluginData.html.replace('</head>', str + '</head>')
+        htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, (match) => {
+          return str + match;
+        })
         if (filesToDelete.indexOf(item) < 0) {
           filesToDelete.push(item)
         }

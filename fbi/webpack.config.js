@@ -14,6 +14,7 @@ module.exports = (require, ctx) => {
   const prod = ctx.isProd
   const hash = ctx.options.webpack.hash
   const hot = !prod && ctx.options.webpack.hot
+  const extractCss = !hot || prod
   const cdn = ctx.options.webpack.cdn || './'
   const noop = function () { }
   const ver = {
@@ -33,7 +34,7 @@ module.exports = (require, ctx) => {
         entries[name] = entries[name].concat([nodeModulesPath + '/babel-polyfill'])
       }
       if (hot) {
-        entries[name] = entries[name].concat([nodeModulesPath + '/webpack-hot-middleware/client'])
+        entries[name] = entries[name].concat([nodeModulesPath + '/webpack-hot-middleware/client?reload=true'])
       }
       entries[name] = entries[name].concat(['./' + item])
     })
@@ -54,16 +55,12 @@ module.exports = (require, ctx) => {
       plugins.push(new HtmlWebpackPlugin({
         filename: filename,
         template: item,
+        cache: !ctx.options.webpack.inline,
         inject: !ctx.options.webpack.inline,
         chunks: hasJs ? ['common', chunkname] : [],
         minify: prod ? {
           collapseWhitespace: true,
-          preserveLineBreaks: false,
-          removeComments: true,
-          removeEmptyAttributes: true,
-          removeStyleLinkTypeAttributes: true,
-          removeScriptTypeAttributes: true,
-          useShortDoctype: true
+          preserveLineBreaks: false
         } : false,
         inline: ctx.options.webpack.inline
       }))
@@ -151,11 +148,11 @@ module.exports = (require, ctx) => {
           },
         {
           test: /\.css$/,
-          loader: ExtractTextPlugin.extract({
+          loader: extractCss ? ExtractTextPlugin.extract({
             fallbackLoader: 'style',
             loader: 'css!postcss',
             publicPath: ctx.options.webpack.inline ? cdn : '../'  // assets path prefix in css
-          })
+          }) : 'style!css!postcss' // extract-text-webpack-plugin not support css links hot reload
         },
         {
           test: /\.(jpe?g|png|gif|svg)$/i,
@@ -171,19 +168,19 @@ module.exports = (require, ctx) => {
       prod ? new webpack.BannerPlugin(ctx.options.webpack.banner) : noop,
       hot ? new webpack.HotModuleReplacementPlugin() : noop,
       prod ? noop : new webpack.NoErrorsPlugin(),
-      new ExtractTextPlugin({
+      extractCss ? new ExtractTextPlugin({
         filename: hash ?
           (prod ? `css/[name]-${ver.contenthash}.css` : `css/[name].css?${ver.contenthash}`) :
           'css/[name].css',
         disable: false,
         allChunks: false
-      }),
-      new webpack.optimize.CommonsChunkPlugin({
+      }) : noop,
+      ctx.options.webpack.commons ? new webpack.optimize.CommonsChunkPlugin({
         name: 'common',
         filename: hash ?
           (prod ? `js/[name]-${ver.chunkhash}.js` : `js/[name].js?${ver.hash}`) :
           'js/[name].js'
-      }),
+      }) : noop,
       new CopyWebpackPlugin([
         { from: 'src/lib', to: 'lib' },
         { from: 'src/favicon.ico' }

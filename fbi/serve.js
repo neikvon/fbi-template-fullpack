@@ -5,6 +5,7 @@ const convert = require('koa-convert')
 const webpack = require('webpack')
 const devMiddleware = require('koa-webpack-dev-middleware')
 const hotMiddleware = require('koa-webpack-hot-middleware')
+const bs = require('browser-sync').create()
 const webpackConfig = require('./webpack.config.js')(require, ctx)
 const compile = webpack(webpackConfig)
 let start = ctx.taskParams
@@ -12,7 +13,7 @@ let start = ctx.taskParams
   : ctx.options.server.port
 
 // auto selected a valid port & start server
-function autoPortServer(app, cb) {
+function autoPortServer(start, app, cb) {
   let port = start
   start += 1
   const server = http.createServer(app.callback())
@@ -31,7 +32,7 @@ function autoPortServer(app, cb) {
   })
 
   server.on('error', err => {
-    autoPortServer(app, cb)
+    autoPortServer(start, app, cb)
   })
 }
 
@@ -51,7 +52,7 @@ function server() {
   // dev
   app.use(convert(devMiddleware(compile, {
     publicPath: webpackConfig.output.publicPath,
-    headers: {'Access-Control-Allow-Origin': '*'},
+    headers: { 'Access-Control-Allow-Origin': '*' },
     stats: {
       colors: true,
       chunks: false,
@@ -69,8 +70,19 @@ function server() {
   }
 
   // listen
-  autoPortServer(app, port => {
-    ctx.log(`Dev server runing at http://${ctx.options.server.host}:${port}`, 1)
+  const bsPort = start
+  start = start + 1
+  autoPortServer(start, app, port => {
+    bs.init({
+      open: false,
+      ui: false,
+      notify: false,
+      proxy: `${ctx.options.server.host || 'localhost'}:${port}`,
+      files: ['./src/*.html', './src/hbs/**'],
+      port: bsPort
+    })
+    // ctx.log(`Dev server runing at http://${ctx.options.server.host}:${port}`, 1)
+    // ctx.log(`bs server runing at http://${ctx.options.server.host}:${8080}`, 1)
   })
 }
 

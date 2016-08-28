@@ -17,11 +17,12 @@ module.exports = {
   },
   webpack: {
     cdn: '', // CDN路径前缀（用于生产环境）
+    es7: true, // 是否使用ES2016(async, await)
+    tmpl: 'handlebars', // 模板引擎
+    hot: true, // 热更新
     hash: true, // 是否非覆盖式发布
     inline: false, // css、js是否内联
-    tmpl: 'handlebars', // 模板引擎
-    es7: true, // 是否使用ES2016(async, await)
-    hot: true, // 热更新
+    commons: true,  // 是否生成公共文件
     // js css文件头部文案
     banner: `
       Project name - [description]
