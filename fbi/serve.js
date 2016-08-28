@@ -7,10 +7,8 @@ const devMiddleware = require('koa-webpack-dev-middleware')
 const hotMiddleware = require('koa-webpack-hot-middleware')
 const bs = require('browser-sync').create()
 const webpackConfig = require('./webpack.config.js')(require, ctx)
+const prod = ctx.taskParams && ctx.taskParams[0] === 'p' // fbi s -p
 const compile = webpack(webpackConfig)
-let start = ctx.taskParams
-  ? ctx.taskParams[0] * 1
-  : ctx.options.server.port
 
 // auto selected a valid port & start server
 function autoPortServer(start, app, cb) {
@@ -39,6 +37,9 @@ function autoPortServer(start, app, cb) {
 function server() {
   const app = new Koa()
   const fbi = ctx
+  let start = (ctx.taskParams && !isNaN(ctx.taskParams[0]))
+    ? ctx.taskParams[0] * 1
+    : ctx.options.server.port
 
   // logger
   app.use((ctx, next) => {
@@ -49,41 +50,52 @@ function server() {
     })
   })
 
-  // dev
-  app.use(convert(devMiddleware(compile, {
-    publicPath: webpackConfig.output.publicPath,
-    headers: { 'Access-Control-Allow-Origin': '*' },
-    stats: {
-      colors: true,
-      chunks: false,
-      modules: false,
-      children: false
-    }
-  })))
+  if (prod) {
+    // static
+    app.use(koaStatic('./dst'))
 
-  // static
-  app.use(koaStatic('./src'))
-
-  // hot
-  if (ctx.options.webpack.hot) {
-    app.use(convert(hotMiddleware(compile)))
-  }
-
-  // listen
-  const bsPort = start
-  start = start + 1
-  autoPortServer(start, app, port => {
-    bs.init({
-      open: false,
-      ui: false,
-      notify: false,
-      proxy: `${ctx.options.server.host || 'localhost'}:${port}`,
-      files: ['./src/*.html', './src/hbs/**'],
-      port: bsPort
+    // listen
+    autoPortServer(start, app, port => {
+      ctx.log(`Prod server runing at http://${ctx.options.server.host}:${port}`, 1)
     })
-    // ctx.log(`Dev server runing at http://${ctx.options.server.host}:${port}`, 1)
-    // ctx.log(`bs server runing at http://${ctx.options.server.host}:${8080}`, 1)
-  })
+  } else {
+    // dev
+    app.use(convert(devMiddleware(compile, {
+      publicPath: webpackConfig.output.publicPath,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      stats: {
+        colors: true,
+        chunks: false,
+        modules: false,
+        children: false
+      }
+    })))
+
+
+    // static
+    app.use(koaStatic('./src'))
+
+    // hot
+    if (ctx.options.webpack.hot) {
+      app.use(convert(hotMiddleware(compile)))
+    }
+
+    // listen
+    const bsPort = start
+    start = start + 1
+    autoPortServer(start, app, port => {
+      bs.init({
+        open: false,
+        ui: false,
+        notify: false,
+        proxy: `${ctx.options.server.host || 'localhost'}:${port}`,
+        files: ['./src/*.html', './src/hbs/**'],
+        port: bsPort
+      })
+      // ctx.log(`Dev server runing at http://${ctx.options.server.host}:${port}`, 1)
+      // ctx.log(`bs server runing at http://${ctx.options.server.host}:${8080}`, 1)
+    })
+  }
 }
 
 server()
