@@ -1,9 +1,13 @@
+// http://eslint.org/docs/user-guide/configuring
 module.exports = (require, ctx) => {
   return {
+    // https://github.com/airbnb/javascript
+    // https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb-base
     extends: ctx.nodeModulesPath + '/eslint-config-airbnb-base',
     parser: ctx.nodeModulesPath + '/babel-eslint',
     parserOptions: {
-      sourceType: "module",
+      ecmaVersion: 7,
+      sourceType: 'module',
       allowImportExportEverywhere: false
     },
     rules: {

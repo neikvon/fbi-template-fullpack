@@ -51,6 +51,7 @@ function server() {
   // dev
   app.use(convert(devMiddleware(compile, {
     publicPath: webpackConfig.output.publicPath,
+    headers: {'Access-Control-Allow-Origin': '*'},
     stats: {
       colors: true,
       chunks: false,

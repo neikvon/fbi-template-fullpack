@@ -14,6 +14,7 @@ module.exports = (require, ctx) => {
   const prod = ctx.isProd
   const hash = ctx.options.webpack.hash
   const hot = !prod && ctx.options.webpack.hot
+  const cdn = ctx.options.webpack.cdn || './'
   const noop = function () { }
   const ver = {
     hash: '[hash:6]',
@@ -26,12 +27,15 @@ module.exports = (require, ctx) => {
     let entries = {}
     const files = glob.sync(`src/js/*.js`)
     files.map(item => {
-      entries[path.basename(item, '.js')] = hot
-        ? [
-          nodeModulesPath + '/webpack-hot-middleware/client',
-          './' + item
-        ]
-        : './' + item
+      const name = path.basename(item, '.js')
+      entries[name] = []
+      if (ctx.options.webpack.es7) {
+        entries[name] = entries[name].concat([nodeModulesPath + '/babel-polyfill'])
+      }
+      if (hot) {
+        entries[name] = entries[name].concat([nodeModulesPath + '/webpack-hot-middleware/client'])
+      }
+      entries[name] = entries[name].concat(['./' + item])
     })
     return entries
   }
@@ -80,18 +84,23 @@ module.exports = (require, ctx) => {
         (prod ? `js/[name]-${ver.chunkhash}.js` : `js/[name].js?${ver.hash}`) :
         'js/[name].js',
       path: prod ? ctx._.join(__dirname, '../', ctx.options.server.root) : '/',
-      publicPath: prod ? './' : '/'
+      publicPath: prod ? cdn : '/'
     },
+    cache: true,
+    externals: ctx.options.webpack.externals,
     resolve: {
       modules: [
-        'node_modules',
+        path.join(process.cwd(), 'node_modules'),
         nodeModulesPath
-      ]
+      ],
+      extensions: ['', '.js'],
+      unsafeCache: true,
+      alias: ctx.options.webpack.alias
     },
     resolveLoader: {
       modules: [nodeModulesPath] // important !!
     },
-    devtool: !prod ? 'cheap-module-eval-source-map' : null,
+    devtool: !prod ? 'inline-source-map' : null,
     module: {
       preLoaders: [
         // js lint
@@ -106,11 +115,21 @@ module.exports = (require, ctx) => {
         {
           test: /\.js$/,
           loader: 'babel',
-          exclude: /node_modules/,
+          include: [
+            path.join(process.cwd(), './src')
+          ],
+          exclude: function (path) {
+            // 路径中含有 node_modules 的就不去解析。
+            const isNpmModule = !!path.match(/node_modules/)
+            return isNpmModule
+          },
           query: {
             presets: [
               'babel-preset-es2015',
               'babel-preset-stage-0'
+            ].map(item => path.join(nodeModulesPath, item)),
+            plugins: [
+              'babel-plugin-transform-async-to-generator'
             ].map(item => path.join(nodeModulesPath, item)),
             cacheDirectory: true
           }
@@ -135,18 +154,20 @@ module.exports = (require, ctx) => {
           loader: ExtractTextPlugin.extract({
             fallbackLoader: 'style',
             loader: 'css!postcss',
-            publicPath: ctx.options.webpack.inline ? './' : '../'  // assets path prefix in css
+            publicPath: ctx.options.webpack.inline ? cdn : '../'  // assets path prefix in css
           })
         },
         {
           test: /\.(jpe?g|png|gif|svg)$/i,
           loaders: [
-            'url?limit=10&name=img/' + (hash ? (prod ? `[name]-${ver.hash}.[ext]` : `[name].[ext]?${ver.hash}`) : '[name].[ext]')
+            'url?limit=1000&name=img/' + (hash ? (prod ? `[name]-${ver.hash}.[ext]` : `[name].[ext]?${ver.hash}`) : '[name].[ext]')
           ]
         }
-      ]
+      ],
+      noParse: ctx.options.webpack.noParse
     },
     plugins: [
+      new webpack.DefinePlugin(ctx.options.webpack.data || {}),
       prod ? new webpack.BannerPlugin(ctx.options.webpack.banner) : noop,
       hot ? new webpack.HotModuleReplacementPlugin() : noop,
       prod ? noop : new webpack.NoErrorsPlugin(),
@@ -155,7 +176,7 @@ module.exports = (require, ctx) => {
           (prod ? `css/[name]-${ver.contenthash}.css` : `css/[name].css?${ver.contenthash}`) :
           'css/[name].css',
         disable: false,
-        allChunks: true
+        allChunks: false
       }),
       new webpack.optimize.CommonsChunkPlugin({
         name: 'common',
@@ -171,8 +192,7 @@ module.exports = (require, ctx) => {
         compress: {
           warnings: false
         }
-      }) : noop,
-      new webpack.DefinePlugin(ctx.options.webpack.data || {})
+      }) : noop
     ],
     postcss: [
       require('stylelint')(stylelintConfig), // css lint
