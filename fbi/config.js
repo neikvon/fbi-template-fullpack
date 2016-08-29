@@ -32,7 +32,9 @@ module.exports = {
 
       Copyright 2016 [organization]`,
     // 编译时数据
-    data: {},
+    data: {
+      copyright: '@2017'
+    },
     // 定义外部依赖
     externals: [
       {

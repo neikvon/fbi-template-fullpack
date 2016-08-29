@@ -60,7 +60,7 @@ function server() {
     })
   } else {
     // dev
-    app.use(convert(devMiddleware(compile, {
+    const devMiddlewareInstance = devMiddleware(compile, {
       publicPath: webpackConfig.output.publicPath,
       headers: { 'Access-Control-Allow-Origin': '*' },
       stats: {
@@ -69,8 +69,9 @@ function server() {
         modules: false,
         children: false
       }
-    })))
+    })
 
+    app.use(convert(devMiddlewareInstance))
 
     // static
     app.use(koaStatic('./src'))
@@ -85,16 +86,26 @@ function server() {
     start = start + 1
     autoPortServer(start, app, port => {
       bs.init({
-        open: false,
+        open: true,
         ui: false,
         notify: false,
         proxy: `${ctx.options.server.host || 'localhost'}:${port}`,
         files: ['./src/*.html', './src/hbs/**'],
-        port: bsPort
+        port: bsPort,
       })
-      // ctx.log(`Dev server runing at http://${ctx.options.server.host}:${port}`, 1)
-      // ctx.log(`bs server runing at http://${ctx.options.server.host}:${8080}`, 1)
     })
+
+    // watch config
+    // const Watchpack = require('watchpack')
+    // const wp = new Watchpack({
+    //   ignored: /node_modules/
+    // })
+    // wp.watch(['*'], ['./fbi/'], Date.now() - 10000)
+    // wp.on('change', () => {
+    //   // recompile
+    //   devMiddlewareInstance.invalidate()
+    //   bs.reload()
+    // })
   }
 }
 

@@ -4,14 +4,14 @@ import sub from './mods/sub'
 
 async function getJson() {
   try {
-    const ret = await ajax('/lib/test-data.json')
+    const ret = await ajax('/mock/test-data.json')
     console.log(ret)
   } catch (e) {
     console.log(e)
   }
 }
 getJson()
-console.log('app init 1111')
+console.log('app init')
 console.log(`sub: ${sub(2, 559)}`)
 
 // for hot reload

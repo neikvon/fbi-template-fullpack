@@ -84,6 +84,7 @@ module.exports = (require, ctx) => {
       publicPath: prod ? cdn : '/'
     },
     cache: true,
+    data: ctx.options.webpack.data || {},
     externals: ctx.options.webpack.externals,
     resolve: {
       modules: [
@@ -194,7 +195,11 @@ module.exports = (require, ctx) => {
     postcss: [
       require('stylelint')(stylelintConfig), // css lint
       require('postcss-reporter'),
-      require('autoprefixer'),
+      require('autoprefixer')({
+        // http://browserl.ist/
+        // https://github.com/ai/browserslist
+        browsers: ['last 2 versions', 'IE >= 8']
+      }),
       require('precss'),
       prod ? require('cssnano') : noop // css minify
     ]

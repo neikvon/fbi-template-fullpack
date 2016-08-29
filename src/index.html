@@ -3,27 +3,43 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Webpack Demo</title>
+  <title>FullPack</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
   <section class="center">
-    <h2>webpack full 1</h2>
-    <p class="desc">
-      Full webpack template, postcss( precss, autoprefixer, cssnano )
-    </p>
-    <img src="./img/logo.png">
-    <p>
-      <img src="./img/funny.png" alt="">
-      <span class="ico-funny"></span>
-    </p>
-    <p>
-      {{#when 'data' '===' 'data'}}
-        Test 'when' succfullly0
-      {{/when}}
-    </p>
+
+    <h2>FullPack</h2>
+
+    <div class="desc">
+      Full frontend template with
+      <ul>
+        <li><a href="https://github.com/webpack/webpack">Webpack</a></li>
+      <li><a href="http://eslint.org/">ESlint</a></li>
+      <li><a href="http://stylelint.io/">Stylelint</a></li>
+      <li><a href="https://babeljs.io/">Babel</a>(ES2015/ES2016)</li>
+      <li>Development Server (<a href="https://github.com/koajs/koa/tree/v2.x">Koa.js</a>, <a href="https://github.com/webpack/webpack-dev-middleware">webpack-dev-middleware</a>)</li>
+      <li>Hot Module Replacement (<a href="https://www.browsersync.io/">Browsersync</a>, <a href="https://github.com/glenjamin/webpack-hot-middleware">webpack-hot-middleware</a>)</li>
+      <li><a href="http://postcss.org/">PostCss</a>(<a href="https://github.com/jonathantneal/precss">Precss</a>, <a href="https://github.com/postcss/autoprefixer">Autoprefixer</a>)</li>
+      <li><a href="http://handlebarsjs.com/">Handlebars</a></li>
+      </ul>
+    </div>
+
+    <div class="icons-list">
+      <span class="ico webpack"><img src="./img/webpack.png"></span>
+      <span class="ico eslint"></span>
+      <span class="ico babel"></span>
+      <span class="ico postcss"></span>
+      <span class="ico handlebars"></span>
+    </div>
+
+    <div class="copyright">
+      {{webpackConfig.data.copyright}}
+    </div>
+
   </section>
+
   <script src="./lib/fetch.js"></script>
 </body>
 
