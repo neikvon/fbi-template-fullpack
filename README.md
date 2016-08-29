@@ -1,5 +1,5 @@
-# fbi-template-webpack-multiple-entries
-fbi template with multiple entries
+# fbi-template-fullpack
+
 
 __On progress__
 
