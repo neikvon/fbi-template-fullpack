@@ -42,10 +42,11 @@ module.exports = (require, ctx) => {
   }
 
   function templates(plugins) {
-    const files = glob.sync(`src/*.html`)
+    const exts = ctx.options.webpack.tmpl === 'handlebars' ? 'html|hbs|handlebars' : 'html'
+    const files = glob.sync(`src/*.@(${exts})`)
     files.map(item => {
       const filename = path.basename(item)
-      const chunkname = path.basename(item, `.html`)
+      const chunkname = filename.replace(/.(html|hbs|handlebars)/, '') // path.basename(item, `.html`)
       let hasJs = false
       try {
         fs.accessSync('src/js/' + chunkname + '.js')
@@ -53,7 +54,7 @@ module.exports = (require, ctx) => {
       } catch (e) { }
 
       plugins.push(new HtmlWebpackPlugin({
-        filename: filename,
+        filename: chunkname + '.html',
         template: item,
         cache: !ctx.options.webpack.inline,
         inject: !ctx.options.webpack.inline,
