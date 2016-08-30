@@ -5,7 +5,7 @@ import sub from './mods/sub'
 async function getJson() {
   try {
     const ret = await ajax('/mock/test-data.json')
-    console.log(ret)
+    console.log('ajax result', ret)
   } catch (e) {
     console.log(e)
   }

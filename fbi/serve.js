@@ -86,7 +86,7 @@ function server() {
     start = start + 1
     autoPortServer(start, app, port => {
       bs.init({
-        open: true,
+        open: false,
         ui: false,
         notify: false,
         proxy: `${ctx.options.server.host || 'localhost'}:${port}`,

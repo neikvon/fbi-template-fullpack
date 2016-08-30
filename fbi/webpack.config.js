@@ -58,7 +58,7 @@ module.exports = (require, ctx) => {
         template: item,
         cache: !ctx.options.webpack.inline,
         inject: !ctx.options.webpack.inline,
-        chunks: hasJs ? ['common', chunkname] : [],
+        chunks: hasJs ? ['vendor', chunkname] : [],
         minify: prod ? {
           collapseWhitespace: true,
           preserveLineBreaks: false
@@ -139,8 +139,8 @@ module.exports = (require, ctx) => {
             query: {
               extensions: ['.hbs', '.html'],
               inlineRequires: '\/img\/',
-              partialDirs: [path.join(process.cwd(), 'src/hbs/partials')],
-              helperDirs: [path.join(process.cwd(), 'src/hbs/helpers')],
+              partialDirs: [path.join(process.cwd(), 'src/tmpl/partials')],
+              helperDirs: [path.join(process.cwd(), 'src/tmpl/helpers')],
               debug: false
             }
           }
@@ -157,15 +157,24 @@ module.exports = (require, ctx) => {
           }) : 'style!css!postcss' // extract-text-webpack-plugin not support css links hot reload
         },
         {
-          test: /\.(jpe?g|png|gif|svg)$/i,
-          loaders: [
-            'url?limit=1000&name=img/' + (hash ? (prod ? `[name]-${ver.hash}.[ext]` : `[name].[ext]?${ver.hash}`) : '[name].[ext]')
-          ]
+          test: /\.(jpe?g|png|gif|woff|woff2|eot|ttf|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          loader: 'url-loader?limit=10000&name=img/' + ((hash && prod) ? `[name]-${ver.hash}.[ext]` : '[name].[ext]')
+        },
+        {
+          test: /\.json$/, loaders: ['json']
         }
       ],
       noParse: ctx.options.webpack.noParse
     },
     plugins: [
+      new webpack.ProgressPlugin((percentage, message) => {
+        var MOVE_LEFT = new Buffer('1b5b3130303044', 'hex').toString()
+        var CLEAR_LINE = new Buffer('1b5b304b', 'hex').toString()
+        process.stdout.write(`${CLEAR_LINE} webpack compiling ${Math.round(percentage * 100)}%: ${message} ${MOVE_LEFT}`)
+        if (percentage == 1) {
+          // process.stdout.write(`webpack say good, fire up...\n`)
+        }
+      }),
       new webpack.DefinePlugin(ctx.options.webpack.data || {}),
       prod ? new webpack.BannerPlugin(ctx.options.webpack.banner) : noop,
       hot ? new webpack.HotModuleReplacementPlugin() : noop,
@@ -178,10 +187,11 @@ module.exports = (require, ctx) => {
         allChunks: false
       }) : noop,
       ctx.options.webpack.commons ? new webpack.optimize.CommonsChunkPlugin({
-        name: 'common',
+        name: 'vendor',
         filename: hash ?
           (prod ? `js/[name]-${ver.chunkhash}.js` : `js/[name].js?${ver.hash}`) :
-          'js/[name].js'
+          'js/[name].js',
+        minChunks: module => /node_modules/.test(module.resource)
       }) : noop,
       new CopyWebpackPlugin([
         { from: 'src/lib', to: 'lib' },
