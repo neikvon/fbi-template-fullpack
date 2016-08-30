@@ -3,12 +3,34 @@
 <h1>Handlebars file</h1>
 {{> header}}
 
+<br>
+<hr>
+
 {{[transformers/embiggen] 'test embiggen'}}
 
 <br>
+<hr>
 
 {{#when 'data' '===' 'data'}}
   Test 'when' succfullly0
 {{/when}}
+
+<br>
+<hr>
+
+<div>
+  {{#each webpackConfig.data.ARR}}
+    {{this}}
+  {{/each}}
+</div>
+
+<br>
+<hr>
+
+<div>
+  {{#each webpackConfig.data.OBJ}}
+    {{this}}
+  {{/each}}
+</div>
 
 {{> end}}

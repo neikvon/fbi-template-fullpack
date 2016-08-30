@@ -31,9 +31,15 @@ module.exports = {
       Built: ${new Date().toLocaleString()} via fbi
 
       Copyright 2016 [organization]`,
-    // 编译时数据
+    // 模板数据
     data: {
-      copyright: '@2016'
+      VERSION: '5fa3b9',
+      COPYRIGHT: '@2016',
+      ARR: ['one', 'two', 'three'],
+      OBJ: {
+        one: 1,
+        two: '2'
+      }
     },
     // 定义外部依赖
     externals: [

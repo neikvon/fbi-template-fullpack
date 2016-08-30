@@ -1,3 +1,5 @@
-import '../css/index.css'
-
 console.log('fm hbs.js')
+console.log(VERSION)
+console.log(COPYRIGHT)
+console.log(ARR)
+console.log(OBJ)

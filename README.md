@@ -1,8 +1,5 @@
 # fbi-template-fullpack
 
-### Features
-
-
 ### Using
 - [Webpack](https://github.com/webpack/webpack)
 - [Babel](https://babeljs.io/)
@@ -18,15 +15,37 @@
 - [Handlebars.js](http://handlebarsjs.com/)
 
 ### Template Data
+
+for `js` and `handlebars` file
 ```bash
-config.js: webpack.data  =>  html: webpackConfig.data
+# definition
+config.js: webpack.data.VERSION
+
+# usage:
+js:   VERSION
+html: webpackConfig.data.VERSION
 ```
 
 ### Hot Module Replacement for js
 
-Add the code below to then entry js file.
+Add the code below to the entry js file.
 ```js
 if (module.hot) {
   module.hot.accept()
 }
+```
+
+### Development
+```bash
+$ fbi s     # Dev Server (serve webpack complied files & './src' folder)
+```
+
+### Production
+```bash
+$ fbi b     # Complie for production
+```
+
+### Serve production files
+```bash
+$ fbi s -p  # Serve './dst' folder
 ```

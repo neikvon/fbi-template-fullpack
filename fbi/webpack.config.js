@@ -75,6 +75,22 @@ module.exports = (require, ctx) => {
     }
   }
 
+  function DataForDefinePlugin(data) {
+    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+      const copy = JSON.parse(JSON.stringify(data))
+      Object.keys(copy).map(item => {
+        switch (typeof item) {
+          case 'string':
+            copy[item] = JSON.stringify(copy[item])
+            break
+        }
+      })
+      return copy
+    }
+
+    return {}
+  }
+
   const config = {
     entry: entries(),
     output: {
@@ -171,11 +187,9 @@ module.exports = (require, ctx) => {
         var MOVE_LEFT = new Buffer('1b5b3130303044', 'hex').toString()
         var CLEAR_LINE = new Buffer('1b5b304b', 'hex').toString()
         process.stdout.write(`${CLEAR_LINE} webpack compiling ${Math.round(percentage * 100)}%: ${message} ${MOVE_LEFT}`)
-        if (percentage == 1) {
-          // process.stdout.write(`webpack say good, fire up...\n`)
-        }
+        if (percentage == 1) { }
       }),
-      new webpack.DefinePlugin(ctx.options.webpack.data || {}),
+      new webpack.DefinePlugin(DataForDefinePlugin(ctx.options.webpack.data)),
       prod ? new webpack.BannerPlugin(ctx.options.webpack.banner) : noop,
       hot ? new webpack.HotModuleReplacementPlugin() : noop,
       prod ? noop : new webpack.NoErrorsPlugin(),
