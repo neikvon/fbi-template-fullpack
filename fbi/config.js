@@ -1,6 +1,6 @@
 module.exports = {
-  template: 'webpack-multiple-entries',
-  templateDescription: 'Project template with multiple entries.',
+  template: 'fullpack',
+  templateDescription: 'Full project template with multiple entries.',
   server: {
     root: 'dst/',
     host: 'localhost',
