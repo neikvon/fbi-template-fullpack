@@ -1,3 +1,23 @@
+/**
+ * 条件判断
+ * Usage:
+ * {{#when x '===' 0}} do sth {{/when}}
+ * {{#when x '!==' 0}} do sth {{/when}}
+ * {{#when x '<' 0}} do sth {{/when}}
+ * {{#when x '>' 0}} do sth {{/when}}
+ * {{#when x '<=' 0}} do sth {{/when}}
+ * {{#when x '>=' 0}} do sth {{/when}}
+ * {{#when x 'typeof' 'string'}} do sth {{/when}}
+ * {{#when x 'includes' 'a'}} do sth {{/when}}
+ * {{#when x 'startsWith' 'a'}} do sth {{/when}}
+ * {{#when x 'endWith' 'a'}} do sth {{/when}}
+ *
+ * @param {any} left
+ * @param {any} operator
+ * @param {any} right
+ * @param {any} options
+ * @returns
+ */
 module.exports = function (left, operator, right, options) {
   if (arguments.length < 3) {
     throw new Error('Handlebars Helper \'when\' needs 3 parameters')

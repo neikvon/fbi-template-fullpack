@@ -1,0 +1,11 @@
+<!-- 用户指定的当前页面的额外js文件（可不传） -->
+{{#if scripts}}
+  {{#each (string2array scripts)}}
+    <script src="{{this}}"></script>
+  {{/each}}
+{{/if}}
+
+<!-- 项目共用文件和页面入口文件插入点 -->
+</body>
+
+</html>

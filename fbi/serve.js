@@ -6,11 +6,17 @@ const webpack = require('webpack')
 const devMiddleware = require('koa-webpack-dev-middleware')
 const hotMiddleware = require('koa-webpack-hot-middleware')
 const bs = require('browser-sync').create()
-const webpackConfig = require('./webpack.config.js')(require, ctx)
-const prod = ctx.taskParams && ctx.taskParams[0] === 'p' // fbi s -p
-const compile = webpack(webpackConfig)
 
-// auto selected a valid port & start server
+const serveDst = ctx.taskParams && ctx.taskParams[0] === 'p' // fbi s -p
+
+// get env match config
+require('./helpers/getEnv.js')(ctx, serveDst ? '' : 'dev')
+const webpackConfig = require('./config/webpack.config.js')(require, ctx)
+
+const compile = webpack(webpackConfig)
+let start = require('./helpers/getPort.js')(ctx, ctx.options.server.port)
+
+  // auto selected a valid port & start server
 function autoPortServer(start, app, cb) {
   let port = start
   start += 1
@@ -36,33 +42,23 @@ function autoPortServer(start, app, cb) {
 
 function server() {
   const app = new Koa()
-  const fbi = ctx
-  let start = (ctx.taskParams && !isNaN(ctx.taskParams[0]))
-    ? ctx.taskParams[0] * 1
-    : ctx.options.server.port
 
-  // logger
-  app.use((ctx, next) => {
-    const start = new Date()
-    return next().then(() => {
-      const ms = new Date() - start
-      fbi.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-    })
-  })
-
-  if (prod) {
+  if (serveDst) {
     // static
-    app.use(koaStatic('./dst'))
+    app.use(koaStatic(ctx.options.server.root))
 
     // listen
     autoPortServer(start, app, port => {
-      ctx.log(`Prod server runing at http://${ctx.options.server.host}:${port}`, 1)
+      ctx.log(`Server Addr: ${ctx._.colors().yellow('http://'+ctx.options.server.host+':'+port)}`, 1)
+      ctx.log(`Serving '${ctx.options.server.root}'`)
     })
   } else {
     // dev
     const devMiddlewareInstance = devMiddleware(compile, {
       publicPath: webpackConfig.output.publicPath,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
       stats: {
         colors: true,
         chunks: false,
@@ -86,26 +82,15 @@ function server() {
     start = start + 1
     autoPortServer(start, app, port => {
       bs.init({
+        // logLevel: 'silent',
         open: false,
         ui: false,
         notify: false,
         proxy: `${ctx.options.server.host || 'localhost'}:${port}`,
         files: ['./src/*.html', './src/hbs/**'],
-        port: bsPort,
-      })
+        port: bsPort
+      }, () => {})
     })
-
-    // watch config
-    // const Watchpack = require('watchpack')
-    // const wp = new Watchpack({
-    //   ignored: /node_modules/
-    // })
-    // wp.watch(['*'], ['./fbi/'], Date.now() - 10000)
-    // wp.on('change', () => {
-    //   // recompile
-    //   devMiddlewareInstance.invalidate()
-    //   bs.reload()
-    // })
   }
 }
 

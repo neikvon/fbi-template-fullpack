@@ -1,57 +1,73 @@
 module.exports = {
   template: 'fullpack',
-  templateDescription: 'Full project template with multiple entries.',
+  templateDescription: 'Full front-end project template with multiple entries.',
   server: {
+    // 生产文件生成的目标目录
     root: 'dst/',
     host: 'localhost',
+    // fbi s 时使用的端口
     port: 8888
   },
   npm: {
     alias: 'npm',
-    options: ''
-    // options: '--registry=https://registry.npm.taobao.org'
+    options: '--registry=https://registry.npm.taobao.org'
   },
   alias: {
     b: 'build',
     s: 'serve'
   },
   webpack: {
-    cdn: '', // CDN路径前缀（用于生产环境）
-    es7: true, // 是否使用ES2016(async, await)
-    tmpl: 'handlebars', // 模板引擎
-    hot: true, // 热更新
-    hash: true, // 是否非覆盖式发布
-    inline: false, // css、js是否内联
-    commons: true,  // 是否生成公共文件
-    // js css文件头部文案
-    banner: `
-      Project name - [description]
-
-      Author: [name]
-      Built: ${new Date().toLocaleString()} via fbi
-
-      Copyright 2016 [organization]`,
-    // 模板数据
+    // 模板引擎
+    tmpl: 'handlebars',
+    // 热更新
+    hot: true,
+    // 是否生成版本戳(用于非覆盖式发布)
+    hash: false,
+    // css、js是否内联
+    inline: false,
+    // 是否生成公共文件
+    commons: true,
+    // 是否混淆/压缩代码
+    compress: true,
+    // 模板数据(编译时数据)
     data: {
-      VERSION: '5fa3b9',
-      COPYRIGHT: '@2016',
-      ARR: ['one', 'two', 'three'],
-      OBJ: {
-        one: 1,
-        two: '2'
+      // 所有环境
+      all: {
+        // CDN路径前缀
+        CDN: './',
+        VERSION: 'v1.0.1',
+        COPYRIGHT: '@2016'
+      },
+      // 开发环境
+      dev: {
+        CGI_ROOT: 'http://cgi.dev'
+      },
+      // 测试环境
+      test: {
+        CGI_ROOT: 'http://cgi.test'
+      },
+      // 生产环境
+      prod: {
+        CGI_ROOT: 'http://cgi.prod'
       }
     },
     // 定义外部依赖
     externals: [
-      {
-        fetch: true
-      }
+      // {
+      //   fetch: true
+      // }
     ],
     // 用别名做重定向
     alias: {
       // 'whatwg-fetch': 'whatwg-fetch/fetch.js'
     },
-    // 忽略某些模块的解析
-    noParse: []
+    // js css文件头部文案
+    banner: `
+Project name - [description]
+
+Author: [name]
+Built: ${new Date().toLocaleString()} via fbi
+
+Copyright @2016 [organization]`
   }
 }

@@ -1,5 +1,7 @@
 {{> start title="Handlebars Template Demo"}}
 
+{{> nav tab='hbs'}}
+
 <h1>Handlebars file</h1>
 {{> header}}
 
@@ -18,19 +20,6 @@
 <br>
 <hr>
 
-<div>
-  {{#each webpackConfig.data.ARR}}
-    {{this}}
-  {{/each}}
-</div>
-
-<br>
-<hr>
-
-<div>
-  {{#each webpackConfig.data.OBJ}}
-    {{this}}
-  {{/each}}
-</div>
+CGI_ROOT: {{ htmlWebpackPlugin.options.data.CGI_ROOT }}
 
 {{> end}}

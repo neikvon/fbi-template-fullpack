@@ -1,24 +1,29 @@
 @import 'base';
 
-html,
-body {
-  height: 100%;
-}
-
 body {
   margin: 0;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   background-color: #fff;
+}
+
+.global-nav {
+  a {
+    display: inline-block;
+    margin: 0 5px;
+
+    &.curr {
+      color: #666;
+    }
+  }
 }
 
 .center {
   padding: 1em;
   background-color: #fefefe;
   text-align: center;
-  max-width: 800px;
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.8;
 
   h2 {
     font-size: 40px;
@@ -69,8 +74,9 @@ body {
   }
 
   .copyright {
-    padding: 200px 0 10px;
+    padding: 20px;
+    margin-top: 20px;
     color: #ccc;
-    border-bottom: 1px solid #ccc;
   }
 }
+

@@ -1,0 +1,9 @@
+$big-size: 24px;
+
+.sass-test {
+  font-size: $big-size;
+
+  .sub {
+    color: darkred;
+  }
+}

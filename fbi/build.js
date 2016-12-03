@@ -1,15 +1,19 @@
 const webpack = require('webpack')
 const rm = require('rimraf')
 
+// get env match config
 ctx.isProd = true
+require('./helpers/getEnv.js')(ctx, 'prod')
+const webpackConfig = require('./config/webpack.config.js')(require, ctx)
 
-const webpackConfig = require('./webpack.config.js')(require, ctx)
-
+// remove dst folder
 rm.sync(ctx.options.server.root)
+ctx.log(`${ctx.options.server.root} was removed`)
 
+// run webpack
 webpack(webpackConfig, (err, stats) => {
   if (err) {
-    console.log(err, 0)
+    ctx.log(err, 0)
   }
 
   console.log(`
