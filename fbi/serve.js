@@ -11,7 +11,7 @@ const serveDst = ctx.taskParams && ctx.taskParams[0] === 'p' // fbi s -p
 
 // get env match config
 require('./helpers/getEnv.js')(ctx, serveDst ? '' : 'dev')
-const webpackConfig = require('./config/webpack.config.js')(require, ctx)
+const webpackConfig = require('./config/webpack.config.js')
 
 const compile = webpack(webpackConfig)
 let start = require('./helpers/getPort.js')(ctx, ctx.options.server.port)

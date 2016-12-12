@@ -4,7 +4,7 @@ const rm = require('rimraf')
 // get env match config
 ctx.isProd = true
 require('./helpers/getEnv.js')(ctx, 'prod')
-const webpackConfig = require('./config/webpack.config.js')(require, ctx)
+const webpackConfig = require('./config/webpack.config.js')
 
 // remove dst folder
 rm.sync(ctx.options.server.root)
