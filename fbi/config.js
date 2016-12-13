@@ -28,7 +28,7 @@ module.exports = {
     // 是否生成公共文件
     commons: true,
     // 是否混淆/压缩代码
-    compress: true,
+    compress: false,
     // 模板数据(编译时数据)
     data: {
       // 所有环境

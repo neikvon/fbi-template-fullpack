@@ -1,3 +1,10 @@
+// global.ctx = {
+//   log(msg) {
+//     console.log(msg)
+//   }
+// }
+// ctx.options = require('./config')
+
 const webpack = require('webpack')
 const rm = require('rimraf')
 
