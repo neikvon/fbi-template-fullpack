@@ -21,11 +21,13 @@ const ver = {
   chunkhash: '[chunkhash:6]',
   contenthash: '[contenthash:6]'
 }
+const hb = require('/Users/Inman/shaw/fbi-template-fullpack/node_modules/handlebars/dist/cjs/handlebars.runtime.js')
+console.log(hb.template)
 
 // get entries
 let entryNames = []
 
-function entries () {
+function entries() {
   let entries = {}
   const files = glob.sync(`src/js/*.js`)
   files.map(item => {
@@ -48,12 +50,13 @@ function entries () {
   return entries
 }
 
-function templates (plugins) {
+function templates(config) {
   const exts = webpackOpts.tmpl === 'handlebars' ? 'html|hbs|handlebars' : 'html'
   const files = glob.sync(`src/*.@(${exts})`)
+
   files.map(item => {
     const filename = path.basename(item)
-    const chunkname = filename.replace(/.(html|hbs|handlebars)/, '') // path.basename(item, `.html`)
+    const chunkname = filename.replace(/.(html|hbs|handlebars)/, '')
     let hasJs = false
     try {
       fs.accessSync('src/js/' + chunkname + '.js')
@@ -61,11 +64,10 @@ function templates (plugins) {
     } catch (e) {}
 
     const chunks = hasJs ? ['common', chunkname] : ['common']
-    plugins.push(new HtmlWebpackPlugin({
+    config.plugins.push(new HtmlWebpackPlugin({
       data: DataForDefinePlugin(),
       filename: chunkname + '.html',
       template: item,
-      // cache: !webpackOpts.inline,
       cache: false,
       inject: !webpackOpts.inline,
       chunks: chunks,
@@ -89,14 +91,14 @@ function templates (plugins) {
   })
 
   if (webpackOpts.inline) {
-    plugins.push(new HtmlInlineWebpackPlugin({
+    config.plugins.push(new HtmlInlineWebpackPlugin({
       env: prod ? 'production' : '',
       len: files.length
     }))
   }
 }
 
-function DataForDefinePlugin (parse) {
+function DataForDefinePlugin(parse) {
   const data = Object.assign({},
     webpackOpts.data.all || {},
     webpackOpts.data[ctx.env]
@@ -132,32 +134,36 @@ const config = {
   resolve: {
     modules: [
       path.join(process.cwd(), 'node_modules'),
-    // nodeModulesPath
+      // nodeModulesPath
     ],
     extensions: ['*', '.js', '.css', '.json'],
     unsafeCache: true,
-    alias: webpackOpts.alias
+    alias: webpackOpts.alias || {}
   },
   resolveLoader: {
     modules: [
       path.join(process.cwd(), 'node_modules'),
-    // nodeModulesPath
+      // nodeModulesPath
     ]
   },
   devtool: !prod ? 'source-map' : false,
   module: {
+    noParse: [
+      new RegExp('handlebars')
+    ],
     rules: [{
-      test: new RegExp('\.js$'),
-      enforce: 'pre', // enforce: 'pre', enforce: 'post',
-      loader: 'eslint-loader',
-      exclude: new RegExp(/node_modules/),
-      query: eslintConfig
-    },
+        test: new RegExp('\.js$'),
+        // test: /\.js$/,
+        enforce: 'pre', // enforce: 'pre', enforce: 'post',
+        loader: 'eslint-loader',
+        exclude: new RegExp('node_modules'),
+        query: eslintConfig
+      },
 
       {
         test: new RegExp('\.js$'),
         include: path.join(process.cwd(), './src'),
-        exclude: new RegExp(/node_modules/),
+        exclude: new RegExp('node_modules'),
         use: [{
           loader: 'babel-loader',
           query: {
@@ -182,10 +188,14 @@ const config = {
           loader: 'handlebars-loader',
           options: {
             extensions: ['.hbs', '.html'],
+            // runtime: path.join(nodeModulesPath, 'handlebars/dist/cjs/handlebars.runtime.js'),
+            // rootRelative: '',
+            compat: true,
             inlineRequires: new RegExp('\/img\/'),
             partialDirs: [path.join(process.cwd(), 'src/tmpl/partials')],
             helperDirs: [path.join(process.cwd(), 'src/tmpl/helpers')],
-            debug: false
+            debug: false,
+            exclude: new RegExp('node_modules')
           }
         }]
       } : {
@@ -193,36 +203,35 @@ const config = {
         loaders: [{
           loader: 'html-loader'
         }]
-      },
-      {
+      }, {
         test: new RegExp('\.css$'),
         loader: extractCss ?
           ExtractTextPlugin.extract({
             fallbackLoader: 'style-loader',
             loader: 'css-loader!postcss-loader',
+            exclude: new RegExp('node_modules'),
             publicPath: webpackOpts.inline ? (prod ? webpackOpts.data.all.__CDN__ : './') : '../'
           }) : 'style-loader!css-loader!postcss-loader'
-      },
-      {
+      }, {
         test: new RegExp('\.scss$/'),
         loader: extractCss ?
           ExtractTextPlugin.extract({
             fallbackLoader: 'style-loader',
             loader: 'css-loader!sass-loader',
+            exclude: new RegExp('node_modules'),
             publicPath: webpackOpts.inline ? (prod ? webpackOpts.data.all.__CDN__ : './') : '../'
           }) : 'style-loader!css-loader!sass-loader'
-      },
-      {
+      }, {
         test: new RegExp('\.(jpe?g|png|gif|woff|woff2|eot|ttf|svg)?$'),
         loaders: [{
           loader: 'url-loader',
           options: {
             limit: '10000',
+            exclude: new RegExp('node_modules'),
             name: 'img/' + ((hash && prod) ? `[name]-${ver.hash}.[ext]` : '[name].[ext]')
           }
         }]
-      },
-      {
+      }, {
         test: new RegExp('\.json$'),
         loaders: ['json-loader']
       }
@@ -250,22 +259,22 @@ const config = {
     hot ? new webpack.HotModuleReplacementPlugin() : noop,
     prod ? noop : new webpack.NoErrorsPlugin(),
     extractCss ?
-      new ExtractTextPlugin({
-        filename: hash ?
-          (prod ? `css/[name]-${ver.contenthash}.css` : `css/[name].css?${ver.contenthash}`) : 'css/[name].css',
-        disable: false,
-        allChunks: false
-      }) :
-      noop,
+    new ExtractTextPlugin({
+      filename: hash ?
+        (prod ? `css/[name]-${ver.contenthash}.css` : `css/[name].css?${ver.contenthash}`) : 'css/[name].css',
+      disable: false,
+      allChunks: false
+    }) :
+    noop,
     webpackOpts.commons ?
-      new webpack.optimize.CommonsChunkPlugin({
-        name: 'common',
-        filename: hash ?
-          (prod ? `js/[name]-${ver.chunkhash}.js` : `js/[name].js?${ver.hash}`) : 'js/[name].js',
-        chunks: entryNames,
-        minChunks: Infinity
-      }) :
-      noop,
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'common',
+      filename: hash ?
+        (prod ? `js/[name]-${ver.chunkhash}.js` : `js/[name].js?${ver.hash}`) : 'js/[name].js',
+      chunks: entryNames,
+      minChunks: Infinity
+    }) :
+    noop,
     new CopyWebpackPlugin([{
       from: 'src/lib',
       to: 'lib'
@@ -281,6 +290,12 @@ const config = {
   ]
 }
 
-templates(config.plugins)
+templates(config)
+
+if (Object.keys(config.resolve.alias).length) {
+  Object.keys(config.resolve.alias).map(item => {
+    config.module.noParse.push(new RegExp(`/${item}/`))
+  })
+}
 
 module.exports = config
